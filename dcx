@@ -498,8 +498,38 @@ do
 
         local humanoid = nil
         local function applyHeightToHumanoid()
-            if humanoid and humanoid.Parent then
-                humanoid.HipHeight = currentHipHeight
+            if not humanoid or not humanoid.Parent then return end
+            local char = humanoid.Parent
+            if not char then return end
+
+            -- Scale factor relative to default hip height of 2.0
+            local scale = currentHipHeight / 2.0
+
+            -- Apply HipHeight
+            humanoid.HipHeight = currentHipHeight
+
+            -- Scale all body parts via BodyHeightScale, BodyWidthScale, BodyDepthScale
+            local humanoidDesc = humanoid:FindFirstChildOfClass("HumanoidDescription")
+            if humanoidDesc then
+                humanoidDesc.HeightScale = scale
+                humanoidDesc.WidthScale = scale
+                humanoidDesc.DepthScale = scale
+                humanoidDesc.HeadScale = scale
+                pcall(function() humanoid:ApplyDescriptionReset(humanoidDesc) end)
+            end
+
+            -- Fallback: directly scale body parts via StringValue scales
+            local bodyColors = char:FindFirstChild("Body Colors")
+            for _, obj in ipairs(char:GetDescendants()) do
+                if obj.Name == "BodyHeightScale" and obj:IsA("NumberValue") then
+                    obj.Value = scale
+                elseif obj.Name == "BodyWidthScale" and obj:IsA("NumberValue") then
+                    obj.Value = scale
+                elseif obj.Name == "BodyDepthScale" and obj:IsA("NumberValue") then
+                    obj.Value = scale
+                elseif obj.Name == "HeadScale" and obj:IsA("NumberValue") then
+                    obj.Value = scale
+                end
             end
         end
 
